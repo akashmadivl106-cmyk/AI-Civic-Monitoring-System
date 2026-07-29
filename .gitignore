@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual Environment
+venv/
+.env/
+
+# IDE
+.vscode/
+.idea/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Generated evidence
+evidence/**/*.jpg
+evidence/**/*.jpeg
+evidence/**/*.png
+
+# Logs
+logs/*.log
+
+# Temporary output folders
+outputs/
+videos/
+
+# Dataset archives
+*.zip
+
+# Temporary files
+*.tmp
+*.bak
+
+datasets/
+
+# Prediction outputs
+runs/detect/predict/
+
+# Logs
+logs/
+
+# Ignore all training results
+runs/detect/train/
+
+# But keep the trained model
+!runs/detect/train/
+!runs/detect/train/weights/
+!runs/detect/train/weights/best.pt
+
+# Ignore last checkpoint
+runs/detect/train/weights/last.pt
