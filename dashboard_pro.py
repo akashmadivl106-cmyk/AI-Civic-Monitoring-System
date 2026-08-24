@@ -1,4 +1,4 @@
-from flask import Flask, Response, send_from_directory, redirect
+from flask import Flask, Response, send_from_directory, redirect, render_template
 from ultralytics import YOLO
 import cv2
 import os
@@ -501,6 +501,79 @@ def video_feed():
 # DASHBOARD
 # ======================================
 
+
+# ======================================
+# DASHBOARD — DATA HELPERS
+# (display-only formatting; no detection logic here)
+# ======================================
+
+def _classify(message):
+    """Same category logic already used for counting; reused so the
+    table badges always agree with the KPI counts above them."""
+    if "GARBAGE" in message:
+        return "garbage", "GARBAGE"
+    if "TRESPASSING" in message:
+        return "trespass", "TRESPASSING"
+    if "NO PARKING" in message:
+        return "noparking", "NO PARKING"
+    return "other", "EVENT"
+
+
+def _parse_log_line(line):
+    """Parses '[YYYY-MM-DD HH:MM:SS] MESSAGE' lines from logs/alerts.txt
+    into a display-friendly dict. Returns None for malformed lines."""
+
+    line = line.strip()
+
+    if not line.startswith("[") or "]" not in line:
+        return None
+
+    try:
+        end = line.index("]")
+        timestamp = line[1:end]
+        message = line[end + 1:].strip()
+    except ValueError:
+        return None
+
+    category, label = _classify(message)
+
+    return {
+        "time": timestamp,
+        "category": category,
+        "label": label,
+        "message": message,
+    }
+
+
+def _evidence_timestamp(filename):
+    """Best-effort readable timestamp derived from the existing
+    'YYYYMMDD_HHMMSS.jpg' evidence filename format. Falls back to the
+    raw filename if the pattern doesn't match — never fabricates a time."""
+
+    name = os.path.splitext(filename)[0]
+
+    try:
+        dt = datetime.strptime(name, "%Y%m%d_%H%M%S")
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return None
+
+
+def _build_evidence_list(category, filenames):
+    items = []
+    for fname in filenames:
+        items.append({
+            "filename": fname,
+            "url": f"/evidence/{category}/{fname}",
+            "timestamp": _evidence_timestamp(fname),
+        })
+    return items
+
+
+# ======================================
+# DASHBOARD
+# ======================================
+
 @app.route("/")
 def home():
 
@@ -524,6 +597,8 @@ def home():
         "NO PARKING" in log
         for log in logs
     )
+
+    total_violations = garbage + trespassing + noparking
 
     try:
         garbage_images = sorted(
@@ -556,387 +631,42 @@ def home():
         "🔴 OFFLINE"
     )
 
-    html = f"""
-<!DOCTYPE html>
-<html>
-
-<head>
-
-<meta http-equiv="refresh" content="5">
-
-<title>AI Civic Monitoring System</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-
-body {{
-background:#071633;
-color:white;
-font-family:Arial;
-margin:0;
-}}
-
-.header {{
-background:#182842;
-padding:30px;
-text-align:center;
-box-shadow:0 0 20px black;
-}}
-
-.header h1 {{
-font-size:55px;
-margin:0;
-color:#3eb3ff;
-}}
-
-.header p {{
-font-size:24px;
-}}
-
-.section {{
-padding:30px;
-}}
-
-.live {{
-text-align:center;
-}}
-
-.live img{{
-    width:50%;
-    max-width:1000px;
-    height:auto;
-    border-radius:20px;
-    border:4px solid #3eb3ff;
-}}
-
-.buttons {{
-text-align:center;
-margin-top:20px;
-}}
-
-.btn {{
-padding:15px 30px;
-font-size:20px;
-border:none;
-border-radius:10px;
-cursor:pointer;
-margin:10px;
-}}
-
-.start {{
-background:#00c853;
-color:white;
-}}
-
-.stop {{
-background:#ff1744;
-color:white;
-}}
-
-.cards {{
-display:flex;
-justify-content:center;
-gap:30px;
-flex-wrap:wrap;
-}}
-
-.card {{
-width:280px;
-padding:25px;
-text-align:center;
-border-radius:15px;
-font-size:30px;
-font-weight:bold;
-}}
-
-.g {{
-background:orange;
-}}
-
-.t {{
-background:crimson;
-}}
-
-.n {{
-background:royalblue;
-}}
-
-.panel {{
-background:#1a2b4a;
-padding:25px;
-margin-top:25px;
-border-radius:15px;
-}}
-
-.alertbox {{
-background:#b71c1c;
-padding:20px;
-border-radius:15px;
-font-size:25px;
-font-weight:bold;
-}}
-
-.gallery img {{
-width:260px;
-border-radius:10px;
-margin:10px;
-}}
-
-.footer {{
-margin-top:40px;
-padding:25px;
-text-align:center;
-background:#182842;
-}}
-
-</style>
-
-</head>
-
-<body>
-
-<div class="header">
-
-<h1>🏙 AI Civic Monitoring System</h1>
-
-<p>Smart City Surveillance Platform</p>
-
-</div>
-
-<div class="section live">
-
-<h2>📷 Live Monitoring Feed</h2>
-
-<img src="/video_feed">
-
-<div class="buttons">
-
-<a href="/start">
-<button class="btn start">
-▶ Start Monitoring
-</button>
-</a>
-
-<a href="/stop">
-<button class="btn stop">
-■ Stop Monitoring
-</button>
-</a>
-
-</div>
-
-</div>
-
-<div class="section">
-
-<div class="cards">
-
-<div class="card g">
-Garbage Alerts
-<br><br>
-{garbage}
-</div>
-
-<div class="card t">
-Trespassing Alerts
-<br><br>
-{trespassing}
-</div>
-
-<div class="card n">
-No Parking Alerts
-<br><br>
-{noparking}
-</div>
-
-</div>
-
-<div class="panel">
-
-<h2>🚨 Active Alert</h2>
-
-<div class="alertbox">
-{last_alert}
-</div>
-
-</div>
-
-<div class="panel">
-
-<h2>⚙ System Status</h2>
-
-<p>Camera Status : {status}</p>
-
-<p>YOLO Status : 🟢 RUNNING</p>
-
-<p>Server Status : 🟢 ACTIVE</p>
-
-</div>
-
-
-
-<div class="panel">
-
-<h2>📊 Analytics Dashboard</h2>
-
-<div style="
-display:flex;
-justify-content:space-between;
-align-items:stretch;
-gap:20px;
-">
-
-<div style="
-flex:1;
-height:400px;
-background:#13284d;
-padding:20px;
-border-radius:15px;
-">
-<canvas id="barChart"></canvas>
-</div>
-
-<div style="
-flex:1;
-height:400px;
-background:#13284d;
-padding:20px;
-border-radius:15px;
-">
-<canvas id="pieChart"></canvas>
-</div>
-
-</div>
-
-</div>
-
-
-<div class="panel">
-
-<h2>📋 Recent Alerts</h2>
-
-<pre>
-{''.join(logs[-20:])}
-</pre>
-
-</div>
-
-<div class="panel gallery">
-
-<h2>🖼 Latest Evidence</h2>
-
-<h3>Garbage</h3>
-
-"""
-
-    for img in garbage_images:
-
-        html += f"""
-<img src="/evidence/garbage/{img}">
-"""
-
-    html += "<h3>Trespassing</h3>"
-
-    for img in trespass_images:
-
-        html += f"""
-<img src="/evidence/trespassing/{img}">
-"""
-
-    html += "<h3>No Parking</h3>"
-
-    for img in nopark_images:
-
-        html += f"""
-<img src="/evidence/noparking/{img}">
-"""
-
-    html += f"""
-
-</div>
-
-</div>
-
-<div class="footer">
-
-<h2>AI Civic Monitoring System</h2>
-
-<p>Major Project 2025-26</p>
-
-</div>
-
-<script>
-
-new Chart(
-document.getElementById('barChart'),
-{{
-type:'bar',
-data:{{
-labels:[
-'Garbage',
-'Trespassing',
-'No Parking'
-],
-datasets:[{{
-label:'Violations',
-data:[
-{garbage},
-{trespassing},
-{noparking}
-],
-backgroundColor:[
-'orange',
-'crimson',
-'royalblue'
-]
-}}]
-}},
-options:{{
-responsive:true,
-maintainAspectRatio:false
-}}
-}}
-);
-
-new Chart(
-document.getElementById('pieChart'),
-{{
-type:'pie',
-data:{{
-labels:[
-'Garbage',
-'Trespassing',
-'No Parking'
-],
-datasets:[{{
-data:[
-{garbage},
-{trespassing},
-{noparking}
-],
-backgroundColor:[
-'orange',
-'crimson',
-'royalblue'
-]
-}}]
-}},
-options:{{
-responsive:true,
-maintainAspectRatio:false
-}}
-}}
-);
-
-</script>
-
-</body>
-</html>
-"""
-
-    return html
-
+    # ---- Display-only reshaping of the same data above ----
+    # (no new detection/log data is read here beyond what already existed)
+
+    recent_events = [
+        parsed for parsed in (
+            _parse_log_line(line) for line in reversed(logs[-20:])
+        ) if parsed is not None
+    ]
+
+    evidence = {
+        "garbage": _build_evidence_list("garbage", garbage_images),
+        "trespassing": _build_evidence_list("trespassing", trespass_images),
+        "noparking": _build_evidence_list("noparking", nopark_images),
+    }
+
+    # Genuine (not fabricated) system checks: these reflect real,
+    # currently-observable state rather than hardcoded/fabricated values.
+    logging_active = os.path.exists("logs/alerts.txt")
+    evidence_storage_active = os.path.isdir("evidence")
+    models_loaded = garbage_model is not None and coco_model is not None
+
+    return render_template(
+        "index.html",
+        camera_running=camera_running,
+        status_label=status,
+        garbage=garbage,
+        trespassing=trespassing,
+        noparking=noparking,
+        total_violations=total_violations,
+        last_alert=last_alert,
+        recent_events=recent_events,
+        evidence=evidence,
+        logging_active=logging_active,
+        evidence_storage_active=evidence_storage_active,
+        models_loaded=models_loaded,
+    )
 
 # ======================================
 # RUN

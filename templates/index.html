@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Civic Monitoring</title>
+
+<meta http-equiv="refresh" content="5">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        Smart Civic Monitoring
+        <small>AI Surveillance</small>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-link" href="#dashboard"><span class="nav-dot"></span> Dashboard</a>
+      <a class="nav-link" href="#live"><span class="nav-dot"></span> Live Monitoring</a>
+      <a class="nav-link" href="#violations"><span class="nav-dot"></span> Violations</a>
+      <a class="nav-link" href="#evidence"><span class="nav-dot"></span> Evidence</a>
+      <a class="nav-link" href="#analytics"><span class="nav-dot"></span> Analytics</a>
+      <a class="nav-link" href="#system"><span class="nav-dot"></span> System Status</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      MAJOR PROJECT 2025&ndash;26<br>
+      YOLOv8 · Flask · OpenCV
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+
+    <div id="dashboard"></div>
+
+    <header class="page-header">
+      <div>
+        <h1>Smart Civic Monitoring</h1>
+        <p>AI-powered real-time civic violation intelligence</p>
+      </div>
+
+      {% if camera_running %}
+      <div class="status-pill is-live"><span class="dot"></span> LIVE</div>
+      {% else %}
+      <div class="status-pill is-offline"><span class="dot"></span> OFFLINE</div>
+      {% endif %}
+    </header>
+
+    <!-- ============ KPI CARDS ============ -->
+    <section class="section">
+      <div class="kpi-grid">
+        <div class="kpi-card total">
+          <div class="kpi-label">Total Verified Violations</div>
+          <div class="kpi-value">{{ total_violations }}</div>
+        </div>
+        <div class="kpi-card garbage">
+          <div class="kpi-label">Garbage</div>
+          <div class="kpi-value">{{ garbage }}</div>
+        </div>
+        <div class="kpi-card trespass">
+          <div class="kpi-label">Trespassing</div>
+          <div class="kpi-value">{{ trespassing }}</div>
+        </div>
+        <div class="kpi-card noparking">
+          <div class="kpi-label">No Parking</div>
+          <div class="kpi-value">{{ noparking }}</div>
+        </div>
+        <div class="kpi-card highrisk">
+          <div class="kpi-label">High-Risk Events</div>
+          <div class="kpi-value is-na">Not tracked</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ LIVE MONITORING ============ -->
+    <section class="section" id="live">
+      <div class="section-head">
+        <div class="section-title">Live Monitoring</div>
+        <div class="section-note">/video_feed</div>
+      </div>
+
+      <div class="live-grid">
+
+        <div class="live-panel">
+          <div class="live-frame">
+            <img src="{{ url_for('video_feed') }}" alt="Live camera feed">
+            <div class="bracket tl"></div>
+            <div class="bracket tr"></div>
+            <div class="bracket bl"></div>
+            <div class="bracket br"></div>
+            <div class="feed-tag">CAM 01 · {{ status_label }}</div>
+          </div>
+
+          <div class="live-controls">
+            <a href="{{ url_for('start_monitoring') }}"><button class="btn btn-start">&#9654; Start Camera</button></a>
+            <a href="{{ url_for('stop_monitoring') }}"><button class="btn btn-stop">&#9632; Stop Camera</button></a>
+
+            <div class="live-meta">
+              <span>Camera <b>{{ "ONLINE" if camera_running else "OFFLINE" }}</b></span>
+              <span>Detection <b>{{ "RUNNING" if camera_running else "IDLE" }}</b></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="event-panel">
+          <div class="event-title">Active Event</div>
+
+          <div class="event-headline {{ 'has-alert' if last_alert and last_alert != 'No Active Alerts' else '' }}">
+            {{ last_alert }}
+          </div>
+
+          <div class="event-fields">
+            <div class="event-field">
+              <span class="k">Confidence</span>
+              <span class="v na">Not available in current log format</span>
+            </div>
+            <div class="event-field">
+              <span class="k">Risk score</span>
+              <span class="v na">Not available in current log format</span>
+            </div>
+            <div class="event-field">
+              <span class="k">Persistence</span>
+              <span class="v na">Not available in current log format</span>
+            </div>
+            <div class="event-field">
+              <span class="k">Verification</span>
+              <span class="v na">Not tracked in log</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ VIOLATIONS TABLE ============ -->
+    <section class="section" id="violations">
+      <div class="section-head">
+        <div class="section-title">Recent Verified Violations</div>
+        <div class="section-note">logs/alerts.txt · last 20</div>
+      </div>
+
+      <div class="table-wrap">
+        {% if recent_events %}
+        <table class="violations">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Violation</th>
+              <th>Confidence</th>
+              <th>Risk</th>
+              <th>Persistence</th>
+              <th>Evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ev in recent_events %}
+            <tr>
+              <td class="mono">{{ ev.time }}</td>
+              <td><span class="badge {{ ev.category }}">{{ ev.label }}</span></td>
+              <td class="na">&mdash;</td>
+              <td class="na">&mdash;</td>
+              <td class="na">&mdash;</td>
+              <td><a href="#evidence" style="color:var(--accent)">View gallery &rarr;</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="table-footnote">
+          Confidence, risk and persistence columns require fields not currently written to logs/alerts.txt — shown as unavailable rather than estimated.
+        </div>
+        {% else %}
+        <div class="table-empty">No violations logged yet. Events will appear here once logs/alerts.txt has entries.</div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- ============ EVIDENCE ============ -->
+    <section class="section" id="evidence">
+      <div class="section-head">
+        <div class="section-title">Evidence</div>
+        <div class="section-note">most recent 3 per category</div>
+      </div>
+
+      {% for cat, label, badge_class in [
+        ("garbage", "Garbage", "garbage"),
+        ("trespassing", "Trespassing", "trespass"),
+        ("noparking", "No Parking", "noparking")
+      ] %}
+      <div class="evidence-group">
+        <div class="evidence-group-head">
+          <span class="badge {{ badge_class }}">{{ label }}</span>
+          <span class="count">{{ evidence[cat] | length }} item(s)</span>
+        </div>
+
+        {% if evidence[cat] %}
+        <div class="evidence-grid">
+          {% for item in evidence[cat] %}
+          <div class="evidence-card"
+               data-fullsrc="{{ item.url }}"
+               data-caption="{{ label }} &middot; {{ item.timestamp or item.filename }}">
+            <img src="{{ item.url }}" alt="{{ label }} evidence" loading="lazy">
+            <div class="evidence-card-meta">{{ item.timestamp or item.filename }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="evidence-empty">No {{ label.lower() }} evidence captured yet.</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </section>
+
+    <!-- ============ ANALYTICS ============ -->
+    <section class="section" id="analytics">
+      <div class="section-head">
+        <div class="section-title">Analytics</div>
+        <div class="section-note">Chart.js</div>
+      </div>
+
+      <div id="chart-data"
+           data-garbage="{{ garbage }}"
+           data-trespass="{{ trespassing }}"
+           data-noparking="{{ noparking }}"
+           style="display:none"></div>
+
+      <div class="analytics-grid">
+        <div class="chart-panel"><canvas id="barChart"></canvas></div>
+        <div class="chart-panel"><canvas id="pieChart"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ============ SYSTEM STATUS ============ -->
+    <section class="section" id="system">
+      <div class="section-head">
+        <div class="section-title">System Status</div>
+      </div>
+
+      <div class="status-grid">
+        <div class="status-card">
+          <div class="status-card-label">Camera</div>
+          {% if camera_running %}
+          <div class="status-badge on"><span class="dot"></span> ONLINE</div>
+          {% else %}
+          <div class="status-badge off"><span class="dot"></span> OFFLINE</div>
+          {% endif %}
+        </div>
+
+        <div class="status-card">
+          <div class="status-card-label">YOLO / Detection</div>
+          {% if models_loaded %}
+          <div class="status-badge on"><span class="dot"></span> MODEL LOADED</div>
+          {% else %}
+          <div class="status-badge off"><span class="dot"></span> UNAVAILABLE</div>
+          {% endif %}
+        </div>
+
+        <div class="status-card">
+          <div class="status-card-label">Server</div>
+          <div class="status-badge on"><span class="dot"></span> ACTIVE</div>
+        </div>
+
+        <div class="status-card">
+          <div class="status-card-label">Logging</div>
+          {% if logging_active %}
+          <div class="status-badge on"><span class="dot"></span> ACTIVE</div>
+          {% else %}
+          <div class="status-badge off"><span class="dot"></span> INACTIVE</div>
+          {% endif %}
+        </div>
+
+        <div class="status-card">
+          <div class="status-card-label">Evidence Storage</div>
+          {% if evidence_storage_active %}
+          <div class="status-badge on"><span class="dot"></span> ACTIVE</div>
+          {% else %}
+          <div class="status-badge off"><span class="dot"></span> INACTIVE</div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <footer class="page-footer">
+      <span>AI Civic Monitoring System &middot; Major Project 2025&ndash;26</span>
+      <span>Auto-refresh: 5s</span>
+    </footer>
+
+  </main>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightbox-close">Close &times;</button>
+  <img id="lightbox-img" src="" alt="Evidence enlarged">
+  <div class="lightbox-caption" id="lightbox-caption"></div>
+</div>
+
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
