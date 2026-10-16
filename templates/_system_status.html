@@ -1,0 +1,137 @@
+<!-- 1. Garbage Model -->
+<div class="sys-card {{ 'card-ok' if garbage_model_loaded else 'card-warn' }}">
+  <div class="sys-card-top">
+    <div class="sys-icon-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+      </svg>
+    </div>
+    <div class="sys-status-badge {{ 'status-ready' if garbage_model_loaded else 'status-offline' }}">
+      <span class="status-dot"></span>
+      <span>{{ 'MODEL READY' if garbage_model_loaded else 'UNAVAILABLE' }}</span>
+    </div>
+  </div>
+  <div class="sys-name">Garbage Detection Model</div>
+  <div class="sys-desc">YOLOv8n custom fine-tuned on civic litter dataset (8 classes, conf &ge; 0.60)</div>
+  <div class="sys-footer mono-font">runs/detect/train/weights/best.pt</div>
+</div>
+
+<!-- 2. COCO Detection Model -->
+<div class="sys-card {{ 'card-ok' if coco_model_loaded else 'card-warn' }}">
+  <div class="sys-card-top">
+    <div class="sys-icon-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+        <line x1="6" y1="6" x2="6.01" y2="6"></line>
+        <line x1="6" y1="18" x2="6.01" y2="18"></line>
+      </svg>
+    </div>
+    <div class="sys-status-badge {{ 'status-ready' if coco_model_loaded else 'status-offline' }}">
+      <span class="status-dot"></span>
+      <span>{{ 'MODEL READY' if coco_model_loaded else 'UNAVAILABLE' }}</span>
+    </div>
+  </div>
+  <div class="sys-name">Entity Detection (COCO)</div>
+  <div class="sys-desc">YOLOv8n pretrained weights for Person (class 0) & Vehicles (car, bike, bus, truck)</div>
+  <div class="sys-footer mono-font">yolov8n.pt &middot; 80 Classes</div>
+</div>
+
+<!-- 3. Tracking Engine -->
+<div class="sys-card {{ 'card-ok' if tracking_active else 'card-warn' }}">
+  <div class="sys-card-top">
+    <div class="sys-icon-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+      </svg>
+    </div>
+    <div class="sys-status-badge {{ 'status-ready' if tracking_active else 'status-offline' }}">
+      <span class="status-dot"></span>
+      <span>{{ 'TRACKING ACTIVE' if tracking_active else 'STANDBY' }}</span>
+    </div>
+  </div>
+  <div class="sys-name">ByteTrack Motion Tracker</div>
+  <div class="sys-desc">Low-confidence association & Kalman filter multi-object tracker with 8-frame grace decay</div>
+  <div class="sys-footer mono-font">bytetrack.yaml &middot; Persistent ID</div>
+</div>
+
+<!-- 4. Verification Engine -->
+<div class="sys-card {{ 'card-ok' if verification_active else 'card-warn' }}">
+  <div class="sys-card-top">
+    <div class="sys-icon-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+    </div>
+    <div class="sys-status-badge {{ 'status-ready' if verification_active else 'status-offline' }}">
+      <span class="status-dot"></span>
+      <span>{{ 'VERIFYING' if verification_active else 'STANDBY' }}</span>
+    </div>
+  </div>
+  <div class="sys-name">Context Verification Engine</div>
+  <div class="sys-desc">Multi-stage state machine: Object Association, Separation, Stability, and Persistence logic</div>
+  <div class="sys-footer mono-font">5-Stage State Machine</div>
+</div>
+
+<!-- 5. Event Logging Ledger -->
+<div class="sys-card {{ 'card-ok' if logging_active else 'card-warn' }}">
+  <div class="sys-card-top">
+    <div class="sys-icon-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+      </svg>
+    </div>
+    <div class="sys-status-badge {{ 'status-ready' if logging_active else 'status-offline' }}">
+      <span class="status-dot"></span>
+      <span>{{ 'ATOMIC LOGGING' if logging_active else 'INACTIVE' }}</span>
+    </div>
+  </div>
+  <div class="sys-name">Incident Audit Ledger</div>
+  <div class="sys-desc">Thread-safe atomic persistence with corruption recovery and structured JSON storage</div>
+  <div class="sys-footer mono-font">logs/violation_history.json</div>
+</div>
+
+<!-- 6. Evidence Storage Archive -->
+<div class="sys-card {{ 'card-ok' if evidence_storage_active else 'card-warn' }}">
+  <div class="sys-card-top">
+    <div class="sys-icon-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="17 8 12 3 7 8"></polyline>
+        <line x1="12" y1="3" x2="12" y2="15"></line>
+      </svg>
+    </div>
+    <div class="sys-status-badge {{ 'status-ready' if evidence_storage_active else 'status-offline' }}">
+      <span class="status-dot"></span>
+      <span>{{ 'ARCHIVE READY' if evidence_storage_active else 'INACTIVE' }}</span>
+    </div>
+  </div>
+  <div class="sys-name">Forensic Evidence Archive</div>
+  <div class="sys-desc">Microsecond-precision timestamped JPEG single-frame snapshots with Laplacian clarity scoring</div>
+  <div class="sys-footer mono-font">evidence/ &middot; Category Partitions</div>
+</div>
+
+<!-- 7. Optical Camera Feed -->
+<div class="sys-card {{ 'card-ok' if camera_running else 'card-warn' }}">
+  <div class="sys-card-top">
+    <div class="sys-icon-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M23 7l-7 5 7 5V7z"></path>
+        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+      </svg>
+    </div>
+    <div class="sys-status-badge {{ 'status-ready' if camera_running else 'status-offline' }}">
+      <span class="status-dot"></span>
+      <span>{{ 'ONLINE' if camera_running else 'OFFLINE' }}</span>
+    </div>
+  </div>
+  <div class="sys-name">Optical Sensor CAM 01</div>
+  <div class="sys-desc">Direct VideoCapture interface with threaded MJPEG multipart streaming protocol</div>
+  <div class="sys-footer mono-font">cv2.VideoCapture(0) &middot; MJPEG /video_feed</div>
+</div>

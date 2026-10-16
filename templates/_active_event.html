@@ -1,0 +1,94 @@
+{% if active_event %}
+<div class="active-incident-card">
+  <!-- Incident Banner -->
+  <div class="incident-alert-banner severity-{{ 'high' if active_event.risk >= 70 else ('medium' if active_event.risk >= 40 else 'low') }}">
+    <div class="alert-icon-pulse">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </div>
+    <div class="alert-banner-text">
+      <div class="alert-primary-tag">{{ active_event.violation }} VERIFIED</div>
+      <div class="alert-timestamp-tag">CONFIRMED AT {{ active_event.timestamp }}</div>
+    </div>
+  </div>
+
+  <!-- Risk Score Progress Meter -->
+  <div class="risk-meter-container">
+    <div class="risk-meter-labels">
+      <span class="meter-title">Calculated Threat & Risk Score</span>
+      <span class="meter-score-badge severity-{{ 'high' if active_event.risk >= 70 else ('medium' if active_event.risk >= 40 else 'low') }}">
+        {{ active_event.risk }} / 100 &middot; {{ 'HIGH' if active_event.risk >= 70 else ('MEDIUM' if active_event.risk >= 40 else 'LOW') }}
+      </span>
+    </div>
+    <div class="risk-meter-track">
+      <div class="risk-meter-fill fill-{{ 'high' if active_event.risk >= 70 else ('medium' if active_event.risk >= 40 else 'low') }}" style="width: {{ active_event.risk }}%;"></div>
+    </div>
+  </div>
+
+  <!-- Metrics Grid -->
+  <div class="incident-telemetry-grid">
+    <div class="telemetry-item">
+      <span class="telemetry-label">Model Confidence</span>
+      <span class="telemetry-val mono-font">{{ '%.1f'|format(active_event.confidence * 100) }}%</span>
+    </div>
+
+    {% if active_event.association is defined and active_event.association is not none %}
+    <div class="telemetry-item">
+      <span class="telemetry-label">Object Association</span>
+      <span class="telemetry-val mono-font">{{ '%.1f'|format(active_event.association * 100) }}%</span>
+    </div>
+    {% endif %}
+
+    <div class="telemetry-item">
+      <span class="telemetry-label">Zone Persistence</span>
+      <span class="telemetry-val mono-font">{{ active_event.persistence }} frames</span>
+    </div>
+
+    {% if active_event.evidence_quality is defined and active_event.evidence_quality is not none %}
+    <div class="telemetry-item">
+      <span class="telemetry-label">Evidence Clarity</span>
+      <span class="telemetry-val mono-font">{{ '%.1f'|format(active_event.evidence_quality * 100) }}%</span>
+    </div>
+    {% endif %}
+
+    <div class="telemetry-item">
+      <span class="telemetry-label">Verification State</span>
+      <span class="telemetry-val text-green mono-font">VERIFIED &middot; AUDITED</span>
+    </div>
+  </div>
+
+  <!-- Evidence Preview & Action Button -->
+  {% if active_event.evidence %}
+  <div class="incident-evidence-preview">
+    <div class="evidence-thumbnail-frame">
+      <img src="{{ active_event | evidence_url }}" alt="Verified Incident Evidence Thumbnail" loading="lazy">
+      <div class="thumb-overlay">
+        <a class="btn-inspect-evidence" href="{{ active_event | evidence_url }}" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <span>Inspect Full Resolution Evidence</span>
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<div class="incident-empty-state">
+  <div class="radar-scan-graphic">
+    <div class="radar-ring r1"></div>
+    <div class="radar-ring r2"></div>
+    <div class="radar-ring r3"></div>
+    <div class="radar-sweep"></div>
+  </div>
+  <div class="empty-title">{{ last_alert }}</div>
+  <p class="empty-desc">
+    Surveillance verification pipeline is actively monitoring all zones. Intermediate detection states (associating, stabilizing, verifying) are processed continuously in the background and surface here upon full verification.
+  </p>
+</div>
+{% endif %}

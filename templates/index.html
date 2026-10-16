@@ -3,311 +3,627 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Civic Monitoring</title>
+<title>CivicGuard AI — Intelligent Civic Surveillance & Enforcement System</title>
 
-<meta http-equiv="refresh" content="5">
-
+<!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/vendor/chart.umd.min.js') }}"></script>
 </head>
-<body>
+<body class="theme-dark">
 
-<div class="shell">
+<div class="app-layout">
 
-  <!-- ============ SIDEBAR ============ -->
+  <!-- ======================================================== -->
+  <!-- 1. PROFESSIONAL SIDEBAR -->
+  <!-- ======================================================== -->
   <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-mark"></div>
-      <div class="brand-text">
-        Smart Civic Monitoring
-        <small>AI Surveillance</small>
+    <div class="sidebar-brand">
+      <div class="brand-shield">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="brand-info">
+        <span class="brand-title">CivicGuard<span class="brand-highlight">AI</span></span>
+        <span class="brand-badge">CIVIC SURVEILLANCE</span>
       </div>
     </div>
 
-    <nav class="nav">
-      <a class="nav-link" href="#dashboard"><span class="nav-dot"></span> Dashboard</a>
-      <a class="nav-link" href="#live"><span class="nav-dot"></span> Live Monitoring</a>
-      <a class="nav-link" href="#violations"><span class="nav-dot"></span> Violations</a>
-      <a class="nav-link" href="#evidence"><span class="nav-dot"></span> Evidence</a>
-      <a class="nav-link" href="#analytics"><span class="nav-dot"></span> Analytics</a>
-      <a class="nav-link" href="#system"><span class="nav-dot"></span> System Status</a>
+    <div class="sidebar-meta-panel">
+      <div class="meta-stream-dot {{ 'live' if camera_running else 'offline' }}"></div>
+      <div class="meta-stream-text">
+        <span class="meta-stream-label">CAMERA FEED 01</span>
+        <span class="meta-stream-status" id="sidebar-camera-status">{{ 'LIVE STREAMING' if camera_running else 'SYSTEM OFFLINE' }}</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">MONITORING CONSOLE</div>
+
+      <a class="nav-item active" href="#dashboard" data-section="dashboard">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span class="nav-text">Overview</span>
+      </a>
+
+      <a class="nav-item" href="#live" data-section="live">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 7l-7 5 7 5V7z"></path>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+        </svg>
+        <span class="nav-text">Live Surveillance</span>
+        <span class="nav-pill {{ 'pill-online' if camera_running else 'pill-offline' }}" id="nav-live-pill">{{ 'REC' if camera_running else 'IDLE' }}</span>
+      </a>
+
+      <a class="nav-item" href="#violations" data-section="violations">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span class="nav-text">Violations</span>
+        <span class="nav-counter" id="nav-violations-count">{{ total_violations }}</span>
+      </a>
+
+      <a class="nav-item" href="#evidence" data-section="evidence">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21 15 16 10 5 21"></polyline>
+        </svg>
+        <span class="nav-text">Evidence Dossier</span>
+      </a>
+
+      <a class="nav-item" href="#analytics" data-section="analytics">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"></line>
+          <line x1="12" y1="20" x2="12" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="14"></line>
+        </svg>
+        <span class="nav-text">Analytics & Risk</span>
+      </a>
+
+      <div class="nav-section-title">ADMINISTRATION</div>
+
+      <a class="nav-item" href="#zones" data-section="zones">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+        <span class="nav-text">Zone Configuration</span>
+      </a>
+
+      <a class="nav-item" href="#system" data-section="system">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span class="nav-text">System Status</span>
+      </a>
     </nav>
 
-    <div class="sidebar-footer">
-      MAJOR PROJECT 2025&ndash;26<br>
-      YOLOv8 · Flask · OpenCV
+    <div class="sidebar-user">
+      <div class="user-avatar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </div>
+      <div class="user-details">
+        <span class="user-name">Officer In-Charge</span>
+        <span class="user-role">Security Operations</span>
+      </div>
     </div>
   </aside>
 
-  <!-- ============ MAIN ============ -->
-  <main class="main">
+  <!-- ======================================================== -->
+  <!-- 2. MAIN APPLICATION CONTENT -->
+  <!-- ======================================================== -->
+  <main class="main-wrapper">
 
-    <div id="dashboard"></div>
-
-    <header class="page-header">
-      <div>
-        <h1>Smart Civic Monitoring</h1>
-        <p>AI-powered real-time civic violation intelligence</p>
+    <!-- TOP HEADER -->
+    <header class="top-header">
+      <div class="header-left">
+        <div class="header-breadcrumb">
+          <span class="crumb-root">CivicGuard</span>
+          <span class="crumb-separator">/</span>
+          <span class="crumb-active" id="header-section-name">Operations Control</span>
+        </div>
+        <h1 class="header-title">Civic Surveillance Operations</h1>
       </div>
 
-      {% if camera_running %}
-      <div class="status-pill is-live"><span class="dot"></span> LIVE</div>
-      {% else %}
-      <div class="status-pill is-offline"><span class="dot"></span> OFFLINE</div>
-      {% endif %}
+      <div class="header-actions">
+        <!-- Search bar that live-filters table -->
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="global-search" placeholder="Search incidents, dates, IDs..." aria-label="Search violations">
+          <span class="search-kbd">/</span>
+        </div>
+
+        <!-- System operational status indicator -->
+        <div class="system-status-indicator {{ 'is-live' if camera_running else 'is-offline' }}" id="header-status-pill">
+          <span class="status-pulse-dot"></span>
+          <span class="status-text" id="header-status-text">{{ 'SYSTEM ONLINE' if camera_running else 'SYSTEM OFFLINE' }}</span>
+        </div>
+
+        <!-- Notification Bell -->
+        <button class="header-icon-btn" id="notif-bell" title="High-Risk Alerts" aria-label="Notifications">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span class="notif-badge" id="notif-badge">{{ high_risk_count }}</span>
+        </button>
+      </div>
     </header>
 
-    <!-- ============ KPI CARDS ============ -->
-    <section class="section">
-      <div class="kpi-grid">
-        <div class="kpi-card total">
-          <div class="kpi-label">Total Verified Violations</div>
-          <div class="kpi-value">{{ total_violations }}</div>
-        </div>
-        <div class="kpi-card garbage">
-          <div class="kpi-label">Garbage</div>
-          <div class="kpi-value">{{ garbage }}</div>
-        </div>
-        <div class="kpi-card trespass">
-          <div class="kpi-label">Trespassing</div>
-          <div class="kpi-value">{{ trespassing }}</div>
-        </div>
-        <div class="kpi-card noparking">
-          <div class="kpi-label">No Parking</div>
-          <div class="kpi-value">{{ noparking }}</div>
-        </div>
-        <div class="kpi-card highrisk">
-          <div class="kpi-label">High-Risk Events</div>
-          <div class="kpi-value is-na">Not tracked</div>
-        </div>
-      </div>
-    </section>
+    <div class="content-container">
 
-    <!-- ============ LIVE MONITORING ============ -->
-    <section class="section" id="live">
-      <div class="section-head">
-        <div class="section-title">Live Monitoring</div>
-        <div class="section-note">/video_feed</div>
-      </div>
+      <!-- ==================================================== -->
+      <!-- 3. STATISTICS CARDS -->
+      <!-- ==================================================== -->
+      <section class="dashboard-section" id="dashboard">
+        <div class="section-header-compact">
+          <div class="section-title-wrap">
+            <h2 class="section-heading">Key Operational Metrics</h2>
+            <p class="section-subheading">Real-time telemetry and verified civic violation tallies from the verification engine</p>
+          </div>
+          <div class="section-badge">VERIFIED DATA</div>
+        </div>
 
-      <div class="live-grid">
-
-        <div class="live-panel">
-          <div class="live-frame">
-            <img src="{{ url_for('video_feed') }}" alt="Live camera feed">
-            <div class="bracket tl"></div>
-            <div class="bracket tr"></div>
-            <div class="bracket bl"></div>
-            <div class="bracket br"></div>
-            <div class="feed-tag">CAM 01 · {{ status_label }}</div>
+        <div class="stats-grid">
+          <!-- Total Violations -->
+          <div class="stat-card total-card">
+            <div class="stat-card-header">
+              <span class="stat-label">Total Verified Violations</span>
+              <div class="stat-icon-wrap total-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value" id="kpi-total">{{ total_violations }}</div>
+            <div class="stat-footer">
+              <span class="stat-trend neutral">All-time recorded incidents</span>
+            </div>
           </div>
 
-          <div class="live-controls">
-            <a href="{{ url_for('start_monitoring') }}"><button class="btn btn-start">&#9654; Start Camera</button></a>
-            <a href="{{ url_for('stop_monitoring') }}"><button class="btn btn-stop">&#9632; Stop Camera</button></a>
+          <!-- Today's Violations -->
+          <div class="stat-card today-card">
+            <div class="stat-card-header">
+              <span class="stat-label">Today's Incidents</span>
+              <div class="stat-icon-wrap today-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value" id="kpi-today">{{ today_violations }}</div>
+            <div class="stat-footer">
+              <span class="stat-trend positive">Current 24h operational cycle</span>
+            </div>
+          </div>
 
-            <div class="live-meta">
-              <span>Camera <b>{{ "ONLINE" if camera_running else "OFFLINE" }}</b></span>
-              <span>Detection <b>{{ "RUNNING" if camera_running else "IDLE" }}</b></span>
+          <!-- Littering -->
+          <div class="stat-card garbage-card">
+            <div class="stat-card-header">
+              <span class="stat-label">Littering</span>
+              <div class="stat-icon-wrap garbage-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value" id="kpi-garbage">{{ garbage }}</div>
+            <div class="stat-footer">
+              <span class="stat-trend text-amber">Object-separation verified</span>
+            </div>
+          </div>
+
+          <!-- Trespassing -->
+          <div class="stat-card trespass-card">
+            <div class="stat-card-header">
+              <span class="stat-label">Trespassing</span>
+              <div class="stat-icon-wrap trespass-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="8.5" cy="7" r="4"></circle>
+                  <line x1="18" y1="8" x2="23" y2="13"></line>
+                  <line x1="23" y1="8" x2="18" y2="13"></line>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value" id="kpi-trespass">{{ trespassing }}</div>
+            <div class="stat-footer">
+              <span class="stat-trend text-crimson">Restricted perimeter breach</span>
+            </div>
+          </div>
+
+          <!-- No Parking -->
+          <div class="stat-card nopark-card">
+            <div class="stat-card-header">
+              <span class="stat-label">No Parking</span>
+              <div class="stat-icon-wrap nopark-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="1" y="3" width="15" height="13"></rect>
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                  <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                  <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value" id="kpi-noparking">{{ noparking }}</div>
+            <div class="stat-footer">
+              <span class="stat-trend text-azure">Vehicle zone infractions</span>
+            </div>
+          </div>
+
+          <!-- High Risk -->
+          <div class="stat-card highrisk-card">
+            <div class="stat-card-header">
+              <span class="stat-label">High-Risk Events</span>
+              <div class="stat-icon-wrap highrisk-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value" id="kpi-highrisk">{{ high_risk_count }}</div>
+            <div class="stat-footer">
+              <span class="stat-trend text-purple">Severity score &ge; 70/100</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================================================== -->
+      <!-- 4. LIVE MONITORING WORKSPACE -->
+      <!-- ==================================================== -->
+      <section class="dashboard-section" id="live">
+        <div class="section-header-compact">
+          <div class="section-title-wrap">
+            <h2 class="section-heading">Live CCTV Surveillance & Verification</h2>
+            <p class="section-subheading">High-definition optical video feed with contextual AI overlays, ByteTrack tracking, and dynamic zone mapping</p>
+          </div>
+          <div class="stream-channel-badge">FEED ID: CAM-01 (TERMINAL)</div>
+        </div>
+
+        <div class="surveillance-grid">
+
+          <!-- CCTV Video Container -->
+          <div class="cctv-container">
+            <div class="cctv-viewport">
+              <img class="cctv-stream" id="cctv-stream-img" src="{{ url_for('video_feed') }}" alt="Live Surveillance Stream">
+
+              <!-- HUD Target Brackets -->
+              <div class="hud-bracket hud-tl"></div>
+              <div class="hud-bracket hud-tr"></div>
+              <div class="hud-bracket hud-bl"></div>
+              <div class="hud-bracket hud-br"></div>
+
+              <!-- HUD Top Telemetry -->
+              <div class="hud-bar-top">
+                <div class="hud-chip">
+                  <span class="hud-dot {{ 'hud-green' if camera_running else 'hud-red' }}"></span>
+                  <span id="hud-cam-status">CAMERA 01 &middot; {{ 'STREAMING 30 FPS' if camera_running else 'SIGNAL DISCONNECTED' }}</span>
+                </div>
+                <div class="hud-chip hud-mono">YOLOv8 + ByteTrack ACTIVE</div>
+              </div>
+
+              <!-- HUD Bottom Telemetry -->
+              <div class="hud-bar-bottom">
+                <div class="hud-coords">RES: 640&times;480 &middot; PROTOCOL: MJPEG STREAM</div>
+                <div class="hud-clock" id="hud-clock">--:--:--</div>
+              </div>
+            </div>
+
+            <!-- CCTV Playback & Engine Controls -->
+            <div class="cctv-controls-bar">
+              <div class="controls-left">
+                <a href="{{ url_for('start_monitoring') }}" class="btn-action btn-primary" id="btn-start-stream">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                  <span>Start Camera</span>
+                </a>
+                <a href="{{ url_for('stop_monitoring') }}" class="btn-action btn-danger" id="btn-stop-stream">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                  </svg>
+                  <span>Stop Camera</span>
+                </a>
+              </div>
+
+              <div class="controls-right">
+                <div class="status-indicator-tag">
+                  <span class="tag-title">Camera Sensor:</span>
+                  <span class="tag-val {{ 'val-online' if camera_running else 'val-offline' }}" id="meta-camera">{{ 'ONLINE' if camera_running else 'OFFLINE' }}</span>
+                </div>
+                <div class="status-indicator-tag">
+                  <span class="tag-title">Inference Engine:</span>
+                  <span class="tag-val {{ 'val-online' if camera_running else 'val-offline' }}" id="meta-detection">{{ 'PROCESSING' if camera_running else 'STANDBY' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Incident & Verification Panel -->
+          <div class="active-incident-panel" id="event-panel">
+            <div class="incident-panel-header">
+              <div class="panel-header-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>Active Event Verification</span>
+              </div>
+              <span class="badge-dispatch">REAL-TIME DISPATCH</span>
+            </div>
+
+            <!-- Embedded partial -->
+            <div class="incident-panel-body" id="incident-body-wrap">
+              {% include "_active_event.html" %}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ==================================================== -->
+      <!-- 5. VIOLATION HISTORY TABLE -->
+      <!-- ==================================================== -->
+      <section class="dashboard-section" id="violations">
+        <div class="section-header-compact">
+          <div class="section-title-wrap">
+            <h2 class="section-heading">Verified Incident History</h2>
+            <p class="section-subheading">Chronological audit ledger of AI-verified civic violations with persistence scores and evidence</p>
+          </div>
+
+          <div class="table-filter-bar">
+            <div class="filter-chips">
+              <button class="filter-chip active" data-filter="all">All Incidents</button>
+              <button class="filter-chip" data-filter="garbage">Littering</button>
+              <button class="filter-chip" data-filter="trespassing">Trespassing</button>
+              <button class="filter-chip" data-filter="noparking">No Parking</button>
             </div>
           </div>
         </div>
 
-        <div class="event-panel">
-          <div class="event-title">Active Event</div>
+        <div class="table-container" id="violations-table-wrap">
+          {% include "_violations_table.html" %}
+        </div>
+      </section>
 
-          <div class="event-headline {{ 'has-alert' if last_alert and last_alert != 'No Active Alerts' else '' }}">
-            {{ last_alert }}
+      <!-- ==================================================== -->
+      <!-- 6. EVIDENCE GALLERY -->
+      <!-- ==================================================== -->
+      <section class="dashboard-section" id="evidence">
+        <div class="section-header-compact">
+          <div class="section-title-wrap">
+            <h2 class="section-heading">Forensic Evidence Dossier</h2>
+            <p class="section-subheading">High-resolution single-frame evidence snapshots captured at moment of verified infraction</p>
+          </div>
+          <div class="section-badge">IMMUTABLE ARCHIVE</div>
+        </div>
+
+        <div class="evidence-wrapper" id="evidence-gallery">
+          {% include "_evidence_gallery.html" %}
+        </div>
+      </section>
+
+      <!-- ==================================================== -->
+      <!-- 7. ANALYTICS & RISK PROFILES -->
+      <!-- ==================================================== -->
+      <section class="dashboard-section" id="analytics">
+        <div class="section-header-compact">
+          <div class="section-title-wrap">
+            <h2 class="section-heading">Surveillance Analytics & Risk Modeling</h2>
+            <p class="section-subheading">Statistical distribution of verified civic violations and risk severity segmentation</p>
+          </div>
+          <div class="section-badge">CHART.JS TELEMETRY</div>
+        </div>
+
+        <!-- Hidden container passing real backend numbers to JavaScript -->
+        <div id="chart-data"
+             data-garbage="{{ garbage }}"
+             data-trespass="{{ trespassing }}"
+             data-noparking="{{ noparking }}"
+             data-risk-low="{{ risk_distribution.low }}"
+             data-risk-medium="{{ risk_distribution.medium }}"
+             data-risk-high="{{ risk_distribution.high }}"
+             style="display:none"></div>
+
+        <div class="analytics-grid">
+          <!-- Violations Category Bar Chart -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div class="chart-title-group">
+                <h3 class="chart-title">Infractions by Civic Category</h3>
+                <span class="chart-subtitle">Aggregate verified events classified by deep learning model</span>
+              </div>
+              <span class="chart-type-tag">BAR METRIC</span>
+            </div>
+            <div class="chart-canvas-wrap">
+              <canvas id="barChart"></canvas>
+            </div>
           </div>
 
-          <div class="event-fields">
-            <div class="event-field">
-              <span class="k">Confidence</span>
-              <span class="v na">Not available in current log format</span>
+          <!-- Risk Severity Distribution Chart -->
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <div class="chart-title-group">
+                <h3 class="chart-title">Risk Severity Classification</h3>
+                <span class="chart-subtitle">Calculated multi-factor risk scores (Low &lt;40, Med 40-69, High &ge;70)</span>
+              </div>
+              <span class="chart-type-tag">SEVERITY HORIZONTAL</span>
             </div>
-            <div class="event-field">
-              <span class="k">Risk score</span>
-              <span class="v na">Not available in current log format</span>
-            </div>
-            <div class="event-field">
-              <span class="k">Persistence</span>
-              <span class="v na">Not available in current log format</span>
-            </div>
-            <div class="event-field">
-              <span class="k">Verification</span>
-              <span class="v na">Not tracked in log</span>
+            <div class="chart-canvas-wrap">
+              <canvas id="riskChart"></canvas>
             </div>
           </div>
         </div>
+      </section>
 
-      </div>
-    </section>
-
-    <!-- ============ VIOLATIONS TABLE ============ -->
-    <section class="section" id="violations">
-      <div class="section-head">
-        <div class="section-title">Recent Verified Violations</div>
-        <div class="section-note">logs/alerts.txt · last 20</div>
-      </div>
-
-      <div class="table-wrap">
-        {% if recent_events %}
-        <table class="violations">
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>Violation</th>
-              <th>Confidence</th>
-              <th>Risk</th>
-              <th>Persistence</th>
-              <th>Evidence</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for ev in recent_events %}
-            <tr>
-              <td class="mono">{{ ev.time }}</td>
-              <td><span class="badge {{ ev.category }}">{{ ev.label }}</span></td>
-              <td class="na">&mdash;</td>
-              <td class="na">&mdash;</td>
-              <td class="na">&mdash;</td>
-              <td><a href="#evidence" style="color:var(--accent)">View gallery &rarr;</a></td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        <div class="table-footnote">
-          Confidence, risk and persistence columns require fields not currently written to logs/alerts.txt — shown as unavailable rather than estimated.
-        </div>
-        {% else %}
-        <div class="table-empty">No violations logged yet. Events will appear here once logs/alerts.txt has entries.</div>
-        {% endif %}
-      </div>
-    </section>
-
-    <!-- ============ EVIDENCE ============ -->
-    <section class="section" id="evidence">
-      <div class="section-head">
-        <div class="section-title">Evidence</div>
-        <div class="section-note">most recent 3 per category</div>
-      </div>
-
-      {% for cat, label, badge_class in [
-        ("garbage", "Garbage", "garbage"),
-        ("trespassing", "Trespassing", "trespass"),
-        ("noparking", "No Parking", "noparking")
-      ] %}
-      <div class="evidence-group">
-        <div class="evidence-group-head">
-          <span class="badge {{ badge_class }}">{{ label }}</span>
-          <span class="count">{{ evidence[cat] | length }} item(s)</span>
-        </div>
-
-        {% if evidence[cat] %}
-        <div class="evidence-grid">
-          {% for item in evidence[cat] %}
-          <div class="evidence-card"
-               data-fullsrc="{{ item.url }}"
-               data-caption="{{ label }} &middot; {{ item.timestamp or item.filename }}">
-            <img src="{{ item.url }}" alt="{{ label }} evidence" loading="lazy">
-            <div class="evidence-card-meta">{{ item.timestamp or item.filename }}</div>
+      <!-- ==================================================== -->
+      <!-- 8. ZONE CALIBRATION CANVAS -->
+      <!-- ==================================================== -->
+      <section class="dashboard-section" id="zones">
+        <div class="section-header-compact">
+          <div class="section-title-wrap">
+            <h2 class="section-heading">Perspective-Aware Zone Calibration</h2>
+            <p class="section-subheading">Define custom arbitrary polygon boundaries directly on optical camera coordinates</p>
           </div>
-          {% endfor %}
-        </div>
-        {% else %}
-        <div class="evidence-empty">No {{ label.lower() }} evidence captured yet.</div>
-        {% endif %}
-      </div>
-      {% endfor %}
-    </section>
-
-    <!-- ============ ANALYTICS ============ -->
-    <section class="section" id="analytics">
-      <div class="section-head">
-        <div class="section-title">Analytics</div>
-        <div class="section-note">Chart.js</div>
-      </div>
-
-      <div id="chart-data"
-           data-garbage="{{ garbage }}"
-           data-trespass="{{ trespassing }}"
-           data-noparking="{{ noparking }}"
-           style="display:none"></div>
-
-      <div class="analytics-grid">
-        <div class="chart-panel"><canvas id="barChart"></canvas></div>
-        <div class="chart-panel"><canvas id="pieChart"></canvas></div>
-      </div>
-    </section>
-
-    <!-- ============ SYSTEM STATUS ============ -->
-    <section class="section" id="system">
-      <div class="section-head">
-        <div class="section-title">System Status</div>
-      </div>
-
-      <div class="status-grid">
-        <div class="status-card">
-          <div class="status-card-label">Camera</div>
-          {% if camera_running %}
-          <div class="status-badge on"><span class="dot"></span> ONLINE</div>
-          {% else %}
-          <div class="status-badge off"><span class="dot"></span> OFFLINE</div>
-          {% endif %}
+          <div class="section-badge">PERSISTED TO ZONES_CONFIG.JSON</div>
         </div>
 
-        <div class="status-card">
-          <div class="status-card-label">YOLO / Detection</div>
-          {% if models_loaded %}
-          <div class="status-badge on"><span class="dot"></span> MODEL LOADED</div>
-          {% else %}
-          <div class="status-badge off"><span class="dot"></span> UNAVAILABLE</div>
-          {% endif %}
+        <div class="zone-editor-container">
+          <!-- Canvas Overlay Area -->
+          <div class="zone-canvas-stage">
+            <img id="zone-snapshot" src="{{ url_for('api_snapshot') }}" alt="Camera Frame for Polygon Calibration">
+            <canvas id="zone-canvas"></canvas>
+            <div class="canvas-crosshair-badge">CLICK TO PLOT VERTICES (MINIMUM 3)</div>
+          </div>
+
+          <!-- Interactive Calibration Controls -->
+          <div class="zone-controls-panel">
+            <div class="zone-panel-title">Active Restricted Zone</div>
+
+            <div class="zone-selector-grid">
+              <button class="zone-btn active" data-zone="trespass_zone" id="zone-toggle-trespass">
+                <span class="zone-swatch swatch-trespass"></span>
+                <span>Trespass Restricted Area</span>
+              </button>
+              <button class="zone-btn" data-zone="no_parking_zone" id="zone-toggle-noparking">
+                <span class="zone-swatch swatch-nopark"></span>
+                <span>No Parking Enforcement Zone</span>
+              </button>
+            </div>
+
+            <div class="zone-instructions-box">
+              <div class="inst-title">Calibration Procedure:</div>
+              <p>Click points on the camera still to outline the actual physical restricted floor area. Polygon boundaries are projected into the 2D image plane using OpenCV point-polygon verification.</p>
+            </div>
+
+            <div class="zone-button-group">
+              <button class="btn-tool" id="zone-undo">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 14 4 9l5-5"/>
+                  <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/>
+                </svg>
+                <span>Undo Point</span>
+              </button>
+
+              <button class="btn-tool" id="zone-clear">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                <span>Clear Points</span>
+              </button>
+
+              <button class="btn-tool" id="zone-refresh">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M23 4v6h-6"/>
+                  <path d="M1 20v-6h6"/>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
+                <span>Refresh Snapshot</span>
+              </button>
+            </div>
+
+            <div class="zone-action-save">
+              <button class="btn-action btn-save-zone" id="zone-save">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                  <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                <span>Save Polygon Geometry</span>
+              </button>
+            </div>
+
+            <div class="zone-status-msg" id="zone-editor-status">Ready to calibrate points.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================================================== -->
+      <!-- 9. SYSTEM HEALTH & SETTINGS -->
+      <!-- ==================================================== -->
+      <section class="dashboard-section" id="system">
+        <div class="section-header-compact">
+          <div class="section-title-wrap">
+            <h2 class="section-heading">Subsystem Health & Engine Diagnostics</h2>
+            <p class="section-subheading">Operational status of computer vision models, tracking threads, and persistence daemons</p>
+          </div>
+          <div class="section-badge">DIAGNOSTICS</div>
         </div>
 
-        <div class="status-card">
-          <div class="status-card-label">Server</div>
-          <div class="status-badge on"><span class="dot"></span> ACTIVE</div>
+        <div class="system-status-grid" id="system-status-grid">
+          {% include "_system_status.html" %}
         </div>
+      </section>
 
-        <div class="status-card">
-          <div class="status-card-label">Logging</div>
-          {% if logging_active %}
-          <div class="status-badge on"><span class="dot"></span> ACTIVE</div>
-          {% else %}
-          <div class="status-badge off"><span class="dot"></span> INACTIVE</div>
-          {% endif %}
+      <!-- FOOTER -->
+      <footer class="app-footer">
+        <div class="footer-left">
+          <span>CivicGuard AI Surveillance System &middot; Final Year Major Project 2025&ndash;26</span>
+          <span class="footer-divider">&middot;</span>
+          <span>YOLOv8 &middot; ByteTrack &middot; OpenCV &middot; Flask</span>
         </div>
-
-        <div class="status-card">
-          <div class="status-card-label">Evidence Storage</div>
-          {% if evidence_storage_active %}
-          <div class="status-badge on"><span class="dot"></span> ACTIVE</div>
-          {% else %}
-          <div class="status-badge off"><span class="dot"></span> INACTIVE</div>
-          {% endif %}
+        <div class="footer-right">
+          <span class="live-poll-badge" id="footer-updated">Live polling active (2s interval)</span>
         </div>
-      </div>
-    </section>
+      </footer>
 
-    <footer class="page-footer">
-      <span>AI Civic Monitoring System &middot; Major Project 2025&ndash;26</span>
-      <span>Auto-refresh: 5s</span>
-    </footer>
-
+    </div>
   </main>
 </div>
 
-<!-- Lightbox -->
-<div class="lightbox" id="lightbox">
-  <button class="lightbox-close" id="lightbox-close">Close &times;</button>
-  <img id="lightbox-img" src="" alt="Evidence enlarged">
-  <div class="lightbox-caption" id="lightbox-caption"></div>
+<!-- Lightbox Modal for Forensic Inspection -->
+<div class="lightbox-modal" id="lightbox" role="dialog" aria-modal="true">
+  <div class="lightbox-backdrop"></div>
+  <div class="lightbox-container">
+    <div class="lightbox-header">
+      <div class="lightbox-title-text" id="lightbox-caption">Evidence Frame Inspection</div>
+      <button class="lightbox-close-btn" id="lightbox-close" aria-label="Close dialog">&times;</button>
+    </div>
+    <div class="lightbox-body">
+      <img id="lightbox-img" src="" alt="Enlarged Forensic Evidence">
+    </div>
+  </div>
 </div>
 
+<!-- Floating Real-time Toast Notifications Stack -->
+<div class="toast-viewport" id="toast-stack" aria-live="polite"></div>
+
+<!-- Initial Server Data Seeding -->
+<script>
+  window.__INITIAL_EVENT_ID__ = {{ (active_event.id if active_event else 0) | tojson }};
+  window.__INITIAL_ZONES__ = {
+    trespass_zone: {{ trespass_zone | tojson }},
+    no_parking_zone: {{ no_parking_zone | tojson }}
+  };
+</script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 </html>

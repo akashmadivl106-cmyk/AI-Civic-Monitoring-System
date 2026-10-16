@@ -1,0 +1,116 @@
+{% if recent_events %}
+<div class="table-responsive">
+  <table class="table-surveillance" id="violations-table">
+    <thead>
+      <tr>
+        <th class="col-id">Incident ID</th>
+        <th class="col-time">Timestamp</th>
+        <th class="col-type">Civic Category</th>
+        <th class="col-conf">Confidence</th>
+        <th class="col-risk">Threat Risk</th>
+        <th class="col-frames">Persistence</th>
+        <th class="col-assoc">Association</th>
+        <th class="col-evidence">Forensic Evidence</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ev in recent_events %}
+      <tr class="table-row-incident" data-category="{{ ev.category }}" data-search="{{ ev.violation }} {{ ev.timestamp }} #{{ ev.id }}">
+        <td class="col-id">
+          <span class="incident-id-tag">#{{ '%04d' % ev.id if ev.id is number else ev.id }}</span>
+        </td>
+        <td class="col-time mono-font">
+          {{ ev.timestamp }}
+        </td>
+        <td class="col-type">
+          <span class="badge-category badge-{{ ev.category }}">
+            {% if ev.category == 'garbage' %}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            {% elif ev.category == 'trespassing' %}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <line x1="18" y1="8" x2="23" y2="13"></line>
+              <line x1="23" y1="8" x2="18" y2="13"></line>
+            </svg>
+            {% else %}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <rect x="1" y="3" width="15" height="13"></rect>
+              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+              <circle cx="5.5" cy="18.5" r="2.5"></circle>
+              <circle cx="18.5" cy="18.5" r="2.5"></circle>
+            </svg>
+            {% endif %}
+            <span>{{ ev.violation }}</span>
+          </span>
+        </td>
+        <td class="col-conf mono-font">
+          <div class="conf-bar-cell">
+            <span class="conf-num">{{ '%.0f'|format(ev.confidence * 100) }}%</span>
+            <div class="conf-mini-track">
+              <div class="conf-mini-fill" style="width: {{ ev.confidence * 100 }}%;"></div>
+            </div>
+          </div>
+        </td>
+        <td class="col-risk">
+          <span class="severity-pill pill-{{ 'high' if ev.risk >= 70 else ('medium' if ev.risk >= 40 else 'low') }}">
+            <span class="pill-dot"></span>
+            <span class="mono-font">{{ ev.risk }}/100</span>
+            <span class="pill-text">({{ 'HIGH' if ev.risk >= 70 else ('MED' if ev.risk >= 40 else 'LOW') }})</span>
+          </span>
+        </td>
+        <td class="col-frames mono-font text-dim">
+          {{ ev.persistence }} fr
+        </td>
+        <td class="col-assoc mono-font">
+          {% if ev.association is defined and ev.association is not none %}
+            <span class="text-amber">{{ '%.0f'|format(ev.association * 100) }}%</span>
+          {% else %}
+            <span class="text-faint">&mdash;</span>
+          {% endif %}
+        </td>
+        <td class="col-evidence">
+          {% if ev.evidence %}
+          <a class="btn-evidence-link" href="{{ ev | evidence_url }}" target="_blank" rel="noopener">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            <span>Inspect &rarr;</span>
+          </a>
+          {% else %}
+          <span class="text-faint">No Frame</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="table-audit-footer">
+  <div class="audit-source-tag">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+    <span>Source: logs/violation_history.json &middot; Verified Incident Ledger &middot; Non-repudiation audit trail</span>
+  </div>
+</div>
+{% else %}
+<div class="table-empty-container">
+  <div class="empty-icon-wrap">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+      <line x1="16" y1="13" x2="8" y2="13"></line>
+      <line x1="16" y1="17" x2="8" y2="17"></line>
+      <polyline points="10 9 9 9 8 9"></polyline>
+    </svg>
+  </div>
+  <div class="empty-text-title">No Verified Violations Recorded</div>
+  <p class="empty-text-desc">The verification engine has not recorded any verified violations for this camera feed yet. Start the camera stream to begin real-time verification.</p>
+</div>
+{% endif %}

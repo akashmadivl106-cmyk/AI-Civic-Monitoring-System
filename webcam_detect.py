@@ -26,7 +26,7 @@ while True:
         break
 
     # Run YOLO detection
-    results = model(frame,cong=0.5)
+    results = model(frame,conf=0.5)
 
     # Draw bounding boxes
     annotated_frame = results[0].plot()
